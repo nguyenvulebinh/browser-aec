@@ -50,7 +50,7 @@
         &nbsp;&nbsp;&nbsp;Browser AEC: "This is 'remote participant' audio, I should cancel it!"
         
         <br><br><strong>The Solution - WebRTC Loopback:</strong><br>
-        1. <strong>Audio Generation:</strong> Audio is created using the Web Audio API (either uploaded files or the TTS sample)<br>
+        1. <strong>Audio Generation:</strong> Audio is created using the Web Audio API (local TTS sample)<br>
         2. <strong>WebRTC Routing:</strong> The audio is routed through a peer connection loopback:<br>
         &nbsp;&nbsp;&nbsp;• Audio → WebRTC peer connection → "WebRTC Echo Audio" → Your speakers<br>
         &nbsp;&nbsp;&nbsp;• Same audio stream → AEC system (as reference signal)<br>
@@ -75,8 +75,6 @@
 
     <div class="file-input-container">
         <button id="loadSampleButton">Load TTS Sample</button>
-        <div style="margin: 10px 0;">OR</div>
-        <input type="file" id="audioFileInput" accept="audio/*">
         <div id="fileStatus"></div>
     </div>
 
@@ -129,7 +127,6 @@
     const startButton = document.getElementById('startButton');
     const playButton = document.getElementById('playButton');
     const stopButton = document.getElementById('stopButton');
-    const audioFileInput = document.getElementById('audioFileInput');
     const fileStatus = document.getElementById('fileStatus');
     const remoteAudio = document.getElementById('remoteAudio');
     const statusDiv = document.getElementById('status');
@@ -170,24 +167,7 @@
     // =============================================================================
 
     /**
-     * Handle user uploaded audio files
-     * Loads and decodes audio for later playback through WebRTC
-     */
-    audioFileInput.addEventListener('change', async (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            try {
-                const arrayBuffer = await file.arrayBuffer();
-                await loadAudioBuffer(arrayBuffer, file.name);
-            } catch (error) {
-                showFileError('Error loading audio file');
-                console.error('Error loading audio:', error);
-            }
-        }
-    });
-
-    /**
-     * Load the OpenAI TTS sample audio
+     * Load the TTS sample audio from local file
      * Demonstrates the technique with a real TTS voice
      */
     loadSampleButton.addEventListener('click', async () => {
@@ -195,7 +175,7 @@
             fileStatus.textContent = 'Loading TTS sample...';
             fileStatus.style.color = 'blue';
             
-            const response = await fetch('https://cdn.openai.com/API/docs/audio/alloy.wav');
+            const response = await fetch('./alloy.wav');
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -303,7 +283,7 @@
             
             statusDiv.textContent = audioBuffer ? 
                 `Ready. Talk to see your voice, then play the audio. (AEC: ${aecEnabled ? 'ON' : 'OFF'})` : 
-                'Please load sample audio or upload an audio file first.';
+                'Please load the TTS sample first.';
                 
         } catch (err) {
             console.error('Error starting demo:', err);
@@ -569,7 +549,7 @@
      */
     function playAudio() {
         if (!audioContext || !audioBuffer) {
-            statusDiv.textContent = 'Please load sample audio or upload an audio file first.';
+            statusDiv.textContent = 'Please load the TTS sample first.';
             return;
         }
         
@@ -748,7 +728,7 @@
             micVisualizer = new Visualizer(micStream, micCanvas);
             setupRecording();
             
-            statusDiv.textContent = `Microphone updated. (AEC: ${aecEnabled ? 'ON' : 'OFF'}) - ${audioBuffer ? 'Ready to play audio!' : 'Load audio first.'}`;
+            statusDiv.textContent = `Microphone updated. (AEC: ${aecEnabled ? 'ON' : 'OFF'}) - ${audioBuffer ? 'Ready to play audio!' : 'Load TTS sample first.'}`;
             console.log(`🎙️ Microphone restarted with AEC: ${aecEnabled ? 'ON' : 'OFF'}`);
         } catch (error) {
             console.error('Error restarting microphone:', error);

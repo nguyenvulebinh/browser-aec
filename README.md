@@ -1,6 +1,6 @@
 # Browser-based Acoustic Echo Cancellation (AEC) Demo
 
-A comprehensive demonstration of browser-based acoustic echo cancellation using WebRTC loopback technique. This demo shows how to prevent locally generated audio (like TTS voices) from interfering with microphone input in web applications.
+A comprehensive demonstration of browser-based acoustic echo cancellation using WebRTC loopback technique. This self-contained demo shows how to prevent locally generated audio (like TTS voices) from interfering with microphone input in web applications.
 
 ## 🌐 Live Demo
 
@@ -8,12 +8,11 @@ A comprehensive demonstration of browser-based acoustic echo cancellation using 
 
 ## 🎯 What This Demo Shows
 
-This interactive demonstration illustrates how voice assistants and audio applications can use browser-built echo cancellation to remove their own generated audio from microphone input in real-time.
+This interactive demonstration illustrates how voice assistants and audio applications can use browser-built echo cancellation to remove their own generated audio from microphone input in real-time. The demo is completely self-contained with no external dependencies.
 
 ### Key Features:
 - **Real-time AEC Toggle**: Compare echo cancellation ON vs OFF instantly
-- **TTS Sample Audio**: Uses OpenAI's Alloy TTS voice for realistic testing
-- **File Upload Support**: Test with your own audio files
+- **Local TTS Sample**: Uses a built-in TTS voice for realistic testing
 - **Live Audio Visualization**: See microphone input and generated audio waveforms
 - **Recording Playback**: Hear the processed microphone audio after AEC
 - **Cross-browser Support**: Works in Chrome, Firefox, Safari (with compatibility notes)
@@ -109,8 +108,11 @@ This demo serves as:
 
 ## 🛠️ Usage in Your Projects
 
+This simplified demo demonstrates the core WebRTC AEC technique. To use in your projects:
+
 ### For Voice Assistants:
-- Route TTS audio through WebRTC before playing
+- Load your TTS audio into Web Audio API
+- Route TTS audio through WebRTC peer connection loopback before playing
 - Enable AEC in microphone constraints
 - Use this technique to prevent self-triggering
 
@@ -123,6 +125,11 @@ This demo serves as:
 - Useful for custom audio processing pipelines
 
 ## 📝 Technical Notes
+
+### Self-Contained Demo:
+- No external dependencies - includes local TTS sample
+- Works offline once loaded
+- Single HTML file with embedded audio
 
 ### Why WebRTC?
 Browser AEC was designed for video conferencing where:
@@ -138,7 +145,7 @@ Our technique makes locally generated audio appear as "remote participant audio"
 - No additional CPU overhead for echo cancellation logic
 
 ### Limitations:
-- Requires HTTPS for microphone access
+- Requires HTTPS for microphone access (when served from web server)
 - WebRTC adds slight audio delay (normal for real-time processing)
 - Safari has limited audio format support for playback
 
