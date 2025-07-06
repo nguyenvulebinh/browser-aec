@@ -18,10 +18,53 @@
         .visualizer-box { text-align: center; margin: 10px; }
         canvas { background-color: #2c3e50; border-radius: 4px; }
         .instructions { background-color: #eaf2ff; border-left: 5px solid #007bff; padding: 15px; margin-top: 20px; border-radius: 4px; }
+        .instructions-summary { margin-bottom: 15px; }
+        .instructions-detail { display: none; margin-top: 15px; }
+        .toggle-btn { background-color: #28a745; font-size: 14px; padding: 8px 16px; margin-top: 10px; }
+        .toggle-btn:hover { background-color: #218838; }
         .recorded-audio { text-align: center; margin-top: 20px; padding: 15px; background-color: #f0f8ff; border-radius: 4px; }
         p, li { font-size: 16px; }
         #status { text-align: center; font-weight: bold; margin-top: 15px; height: 20px; }
         audio { margin: 10px; }
+        
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .container { padding: 15px; }
+            h1 { font-size: 24px; }
+            h2 { font-size: 20px; }
+            button { font-size: 14px; padding: 8px 16px; margin: 3px; }
+            .visualizers { flex-direction: column; align-items: center; }
+            .visualizer-box { margin: 10px 0; }
+            canvas { width: 100%; max-width: 300px; height: 120px; }
+            .instructions { padding: 10px; font-size: 14px; }
+            .controls { margin-bottom: 15px; }
+            .file-input-container { margin: 10px 0; }
+            #status { font-size: 14px; }
+            #fileStatus { font-size: 14px; }
+            audio { width: 100%; max-width: 300px; }
+            input[type="checkbox"] { transform: scale(1.5); margin-right: 10px; }
+            .toggle-btn { font-size: 12px; padding: 6px 12px; }
+            label { font-size: 14px; }
+            .recorded-audio { padding: 10px; font-size: 14px; }
+        }
+        
+        @media (max-width: 480px) {
+            .container { padding: 10px; }
+            h1 { font-size: 20px; }
+            h2 { font-size: 18px; }
+            button { font-size: 12px; padding: 6px 12px; }
+            canvas { height: 100px; }
+            .instructions { font-size: 13px; }
+            p, li { font-size: 14px; }
+            .controls { flex-direction: column; align-items: center; }
+            .controls > div { margin-bottom: 10px; }
+            .toggle-btn { font-size: 11px; padding: 5px 10px; }
+            label { font-size: 12px; }
+            input[type="checkbox"] { transform: scale(1.3); }
+            .recorded-audio { padding: 8px; font-size: 12px; }
+            #fileStatus { font-size: 12px; }
+        }
     </style>
 </head>
 <body>
@@ -29,48 +72,55 @@
 <div class="container">
     <h1>Echo Cancellation</h1>
     <p class="instructions">
-        <strong>How This Demo Works:</strong><br><br>
+        <div class="instructions-summary">
+            <strong>How This Demo Works:</strong><br>
+            This demo shows browser-based <strong>Acoustic Echo Cancellation (AEC)</strong> using WebRTC. When a voice assistant plays audio, that audio can be picked up by the microphone. Browser AEC only works with WebRTC audio, so we use a "loopback trick" to route local audio through WebRTC, making the browser treat it as "remote participant audio" and automatically cancel it from the microphone.
+            
+            <br><br><strong>Try it:</strong> Start the demo, load the TTS sample, then toggle AEC ON/OFF to hear the dramatic difference!
+        </div>
         
-        This demonstration showcases browser-based <strong>Acoustic Echo Cancellation (AEC)</strong> using a WebRTC loopback technique. Here's the technical breakdown:
+        <button class="toggle-btn" onclick="toggleInstructions()">Show Technical Details</button>
         
-        <br><br><strong>The Problem:</strong><br>
-        When a voice assistant plays audio (like TTS responses), that audio can be picked up by the microphone and interfere with voice recognition. Browsers have built-in AEC, but it only works with audio that arrives through WebRTC connections - not locally generated audio.
-        
-        <br><br><strong>getUserMedia vs WebRTC - The Missing Link:</strong><br>
-        <strong>getUserMedia's Role:</strong> Provides the microphone stream with AEC capability built-in. When you set <code>echoCancellation: true</code>, the browser applies acoustic echo cancellation to the microphone audio stream.<br><br>
-        
-        <strong>The Key Insight:</strong> Browser AEC only cancels audio it "knows about" - specifically audio that comes through WebRTC peer connections.<br><br>
-        
-        <strong>Without WebRTC:</strong><br>
-        &nbsp;&nbsp;&nbsp;Locally Generated Audio → Speakers → Microphone → getUserMedia<br>
-        &nbsp;&nbsp;&nbsp;Browser AEC: "I don't know about this audio, so I won't cancel it"<br><br>
-        
-        <strong>With WebRTC Loopback:</strong><br>
-        &nbsp;&nbsp;&nbsp;Locally Generated Audio → WebRTC → Speakers → Microphone → getUserMedia<br>
-        &nbsp;&nbsp;&nbsp;Browser AEC: "This is 'remote participant' audio, I should cancel it!"
-        
-        <br><br><strong>The Solution - WebRTC Loopback:</strong><br>
-        1. <strong>Audio Generation:</strong> Audio is created using the Web Audio API (local TTS sample)<br>
-        2. <strong>WebRTC Routing:</strong> The audio is routed through a peer connection loopback:<br>
-        &nbsp;&nbsp;&nbsp;• Audio → WebRTC peer connection → "WebRTC Echo Audio" → Your speakers<br>
-        &nbsp;&nbsp;&nbsp;• Same audio stream → AEC system (as reference signal)<br>
-        3. <strong>AEC:</strong> The browser's AEC now "knows" about the audio and automatically removes it from the microphone input
-        
-        <br><br><strong>The Loopback Trick:</strong><br>
-        We create two peer connections (pc1 ↔ pc2) talking to each other. The TTS audio is sent through this loopback, making the browser treat our locally generated audio as if it were a "remote participant" in a video call. This bridges locally generated audio to the browser's built-in AEC system.
-        
-        <br><br><strong>Real-time Visualization:</strong><br>
-        • <strong>Microphone Input:</strong> Shows your voice and background audio after AEC processing<br>
-        • <strong>Audio to be Cancelled:</strong> Shows the reference audio that should be removed<br>
-        • <strong>WebRTC Echo Audio:</strong> The audio stream that teaches AEC what to cancel
-        
-        <br><br><strong>AEC Toggle:</strong><br>
-        Toggle echo cancellation ON/OFF to see the dramatic difference. With AEC OFF, played audio bleeds into the microphone. With AEC ON, it's completely removed while preserving your voice.
-        
-        <br><br><strong>Recording:</strong><br>
-        The demo continuously records your microphone to demonstrate how well AEC works in practice. When you stop, you can hear the processed audio that a voice assistant would actually receive.
-        
-        <br><br>This technique is used by real voice assistants to prevent their own speech from triggering unwanted activations or interfering with user commands.
+        <div class="instructions-detail" id="instructionsDetail">
+            <br><strong>The Problem:</strong><br>
+            When a voice assistant plays audio (like TTS responses), that audio can be picked up by the microphone and interfere with voice recognition. Browsers have built-in AEC, but it only works with audio that arrives through WebRTC connections - not locally generated audio.
+            
+            <br><br><strong>getUserMedia vs WebRTC - The Missing Link:</strong><br>
+            <strong>getUserMedia's Role:</strong> Provides the microphone stream with AEC capability built-in. When you set <code>echoCancellation: true</code>, the browser applies acoustic echo cancellation to the microphone audio stream.<br><br>
+            
+            <strong>The Key Insight:</strong> Browser AEC only cancels audio it "knows about" - specifically audio that comes through WebRTC peer connections.<br><br>
+            
+            <strong>Without WebRTC:</strong><br>
+            &nbsp;&nbsp;&nbsp;Locally Generated Audio → Speakers → Microphone → getUserMedia<br>
+            &nbsp;&nbsp;&nbsp;Browser AEC: "I don't know about this audio, so I won't cancel it"<br><br>
+            
+            <strong>With WebRTC Loopback:</strong><br>
+            &nbsp;&nbsp;&nbsp;Locally Generated Audio → WebRTC → Speakers → Microphone → getUserMedia<br>
+            &nbsp;&nbsp;&nbsp;Browser AEC: "This is 'remote participant' audio, I should cancel it!"
+            
+            <br><br><strong>The Solution - WebRTC Loopback:</strong><br>
+            1. <strong>Audio Generation:</strong> Audio is created using the Web Audio API (local TTS sample)<br>
+            2. <strong>WebRTC Routing:</strong> The audio is routed through a peer connection loopback:<br>
+            &nbsp;&nbsp;&nbsp;• Audio → WebRTC peer connection → "WebRTC Echo Audio" → Your speakers<br>
+            &nbsp;&nbsp;&nbsp;• Same audio stream → AEC system (as reference signal)<br>
+            3. <strong>AEC:</strong> The browser's AEC now "knows" about the audio and automatically removes it from the microphone input
+            
+            <br><br><strong>The Loopback Trick:</strong><br>
+            We create two peer connections (pc1 ↔ pc2) talking to each other. The TTS audio is sent through this loopback, making the browser treat our locally generated audio as if it were a "remote participant" in a video call. This bridges locally generated audio to the browser's built-in AEC system.
+            
+            <br><br><strong>Real-time Visualization:</strong><br>
+            • <strong>Microphone Input:</strong> Shows your voice and background audio after AEC processing<br>
+            • <strong>Audio to be Cancelled:</strong> Shows the reference audio that should be removed<br>
+            • <strong>WebRTC Echo Audio:</strong> The audio stream that teaches AEC what to cancel
+            
+            <br><br><strong>AEC Toggle:</strong><br>
+            Toggle echo cancellation ON/OFF to see the dramatic difference. With AEC OFF, played audio bleeds into the microphone. With AEC ON, it's completely removed while preserving your voice.
+            
+            <br><br><strong>Recording:</strong><br>
+            The demo continuously records your microphone to demonstrate how well AEC works in practice. When you stop, you can hear the processed audio that a voice assistant would actually receive.
+            
+            <br><br>This technique is used by real voice assistants to prevent their own speech from triggering unwanted activations or interfering with user commands.
+        </div>
     </p>
 
     <div class="file-input-container">
@@ -834,6 +884,26 @@
     startButton.addEventListener('click', startDemo);
     playButton.addEventListener('click', playAudio);
     stopButton.addEventListener('click', stopDemo);
+
+    // =============================================================================
+    // INSTRUCTIONS TOGGLE FUNCTIONALITY
+    // =============================================================================
+    
+    /**
+     * Toggle the visibility of detailed instructions
+     */
+    function toggleInstructions() {
+        const detailDiv = document.getElementById('instructionsDetail');
+        const toggleBtn = document.querySelector('.toggle-btn');
+        
+        if (detailDiv.style.display === 'none' || detailDiv.style.display === '') {
+            detailDiv.style.display = 'block';
+            toggleBtn.textContent = 'Hide Technical Details';
+        } else {
+            detailDiv.style.display = 'none';
+            toggleBtn.textContent = 'Show Technical Details';
+        }
+    }
 
 </script>
 </body>
